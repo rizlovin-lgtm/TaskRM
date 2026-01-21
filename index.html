@@ -2,178 +2,211 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>RM Tasks - Office & Tasks</title>
+<title>RM Tasks</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-:root{--black:#0f0f0f;--orange:#ff9f1a;--gray:#1e1e1e;--text:#f5f5f5;--red:#ff4d4d;--yellow:#ffc107;--green:#4caf50}
+:root{
+  --black:#0f0f0f;
+  --orange:#ff9f1a;
+  --gray:#1e1e1e;
+  --text:#f5f5f5;
+  --red:#ff4d4d;
+  --yellow:#ffc107;
+  --green:#4caf50;
+}
 body{margin:0;font-family:Arial;background:var(--black);color:var(--text)}
 header{padding:20px;border-bottom:2px solid var(--orange)}
-h1{margin:0;color:var(--orange)}
+h1,h2{margin:0;color:var(--orange)}
 main{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
 section{background:var(--gray);padding:20px;border-radius:14px}
-h2{margin-top:0;color:var(--orange)}
 input,textarea,button{padding:8px;border-radius:8px;border:none;font-size:14px}
 input,textarea{background:#2b2b2b;color:#fff;width:100%}
 button{cursor:pointer;font-weight:bold}
 .primary{background:var(--orange)}
 .secondary{background:#333;color:#fff}
 .small{padding:4px 8px;font-size:12px}
-.item{background:#141414;padding:12px;border-radius:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px;}
-.item-top{display:flex;align-items:center;gap:10px;width:100%}
-.item-info{flex:1;display:flex;flex-direction:column;gap:6px}
-.item img{border-radius:8px}
+
+.item{background:#141414;padding:12px;border-radius:12px;margin-top:10px}
+.item-top{display:flex;gap:10px;align-items:center}
+.item-info{flex:1}
 .qty-label{color:var(--orange);font-weight:bold}
-.progress-container{background:#333;border-radius:8px;width:100%;height:20px;overflow:hidden}
-.progress-bar{height:100%;width:100%;background:var(--green);text-align:center;color:#000;font-weight:bold;line-height:20px}
-.item-buttons{display:flex;gap:4px;justify-content:flex-end}
-.task-list{list-style:none;padding:0;margin:0;max-height:600px;overflow-y:auto}
-.task-list li{background:#222;padding:10px;margin-bottom:6px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:6px}
-.task-buttons{display:flex;gap:4px;align-items:center}
-.task-color{width:30px;height:30px;border:none;border-radius:4px;cursor:pointer}
+.progress-container{background:#333;border-radius:8px;height:20px;overflow:hidden}
+.progress-bar{height:100%;line-height:20px;font-weight:bold;color:#000}
+
+.item-buttons{display:flex;gap:4px}
+
+.task-list{list-style:none;padding:0;margin-top:10px}
+.task-list li{
+  padding:10px;
+  border-radius:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+}
+.task-buttons{display:flex;gap:4px}
+.task-color{width:44px;height:32px;border:none;border-radius:6px}
 .done{text-decoration:line-through;opacity:.5}
 footer{text-align:center;color:#777;font-size:12px;padding:10px}
 </style>
 </head>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<script>
-  const firebaseConfig = {
-  apiKey: "AIzaSyDyLHYbxuhQn8-vpEXBqhQ7z2UPh1JvFt0",
-  authDomain: "taskrm-69472.firebaseapp.com",
-  projectId: "taskrm-69472",
-  storageBucket: "taskrm-69472.firebasestorage.app",
-  messagingSenderId: "715246745892",
-  appId: "1:715246745892:web:6ad9441c2765fc039cdbb1",
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
-
-
-
-
-
- 
 <body>
+
 <header><h1>RM Tasks</h1></header>
+
 <main>
 <section>
 <h2>Офис RM</h2>
-<input id="itemName" placeholder="Название товара" />
-<input id="itemQty" type="number" placeholder="Количество" />
-<input type="file" id="itemFile" accept="image/*" />
+<input id="itemName" placeholder="Название товара">
+<input id="itemQty" type="number" placeholder="Количество">
+<input id="itemFile" type="file" accept="image/*">
 <button class="primary" onclick="addItem()">Добавить</button>
 <div id="itemsList"></div>
 </section>
+
 <section>
 <h2>Задачи RM</h2>
 <textarea id="taskText" placeholder="Текст задачи"></textarea>
-<input id="taskDeadline" type="datetime-local" />
-<input type="color" id="taskColor" value="#ff9f1a" class="task-color" />
+<input id="taskDeadline" type="datetime-local">
+<input type="color" id="taskColor" value="#ff9f1a" class="task-color">
 <button class="primary" onclick="addTask()">Добавить</button>
-<ul class="task-list" id="tasksContainer"></ul>
+<ul id="tasksContainer" class="task-list"></ul>
 </section>
 </main>
-<footer>RM Tasks · Office system</footer>
+
+<footer>RM Tasks · Firebase</footer>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
 <script>
-const WA='77475573062';
-let items = [];
-let tasks = [];
+const firebaseConfig = {
+  apiKey: "AIzaSyDyLHYbxuhQn8-vpEXBqhQ7z2UPh1JvFt0",
+  authDomain: "taskrm-69472.firebaseapp.com",
+  projectId: "taskrm-69472"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-async function loadData() {
-  const itemsSnap = await db.collection("items").get();
-  items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  const tasksSnap = await db.collection("tasks").get();
-  tasks = tasksSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
+/* LOAD DATA */
+async function loadData(){
   renderItems();
   renderTasks();
 }
 
-
 /* ITEMS */
-function addItem(){
- const n=document.getElementById('itemName').value.trim();
- const q=+document.getElementById('itemQty').value;
- const file=document.getElementById('itemFile').files[0];
- if(!n||isNaN(q))return alert('Заполни данные');
- if(file){
-   const reader=new FileReader();
-   reader.onload=function(e){
-     const imgData=e.target.result;
-     items.push({n,q,max:q,img:imgData,notified:false});
-     save();renderItems();document.getElementById('itemName').value='';document.getElementById('itemQty').value='';document.getElementById('itemFile').value='';
-   };
-   reader.readAsDataURL(file);
- } else {
-   items.push({n,q,max:q,img:'',notified:false});
-   save();renderItems();
- }
-}
-function renderItems(){
- const list=document.getElementById('itemsList');list.innerHTML='';
- items.forEach((it,i)=>{
-  const low=it.q<5;const veryLow=it.q<2;
-  if(low&&!it.notified){wa(`❗ ${it.n} заканчивается, нужно заказать`);it.notified=true;save();}
-  let color='var(--green)';
-  if(veryLow) color='var(--red)';
-  else if(low) color='var(--yellow)';
-  const pct=Math.round((it.q/it.max)*100);
-  const d=document.createElement('div');
-  d.className='item';
-  d.innerHTML=`
-    <div class='item-top'>${it.img?`<img src='${it.img}' width=50 height=50>`:''}
-      <div class='item-info'>
-        <strong>${it.n}</strong>
-        <div class='qty-label'>Количество:</div>
-        <div class='progress-container'><div class='progress-bar' style='width:${pct}%;background:${color}'>${it.q}</div></div>
-      </div>
-      <div class='item-buttons'>
-        <button class='small primary' onclick='issue(${i})'>Выдал</button>
-        <button class='small secondary' onclick='editItem(${i})'>Ред</button>
-        <button class='small secondary' onclick='delItem(${i})'>✕</button>
-      </div>
-    </div>`;
-  list.appendChild(d);
- });
-}
-function issue(i){if(items[i].q>0)items[i].q--;save();renderItems();}
-function editItem(i){const q=prompt('Количество',items[i].q);if(q!==null){items[i].q=+q;items[i].notified=false;save();renderItems();}}
-function delItem(i){if(confirm('Удалить?')){items.splice(i,1);save();renderItems();}}
+async function addItem(){
+  const n=itemName.value.trim();
+  const q=+itemQty.value;
+  if(!n||!q) return alert('Заполни данные');
 
-/* TASKS LIST */
-function addTask(){
- const t=document.getElementById('taskText').value.trim();
- if(!t)return;
- tasks.push({t,color:document.getElementById('taskColor').value,dl:document.getElementById('taskDeadline').value,done:false,notified:false});
- save();renderTasks();document.getElementById('taskText').value='';
+  let img='';
+  if(itemFile.files[0]){
+    const r=new FileReader();
+    r.onload=async e=>{
+      img=e.target.result;
+      await db.collection('items').add({n,q,max:q,img});
+      itemName.value=itemQty.value=itemFile.value='';
+      renderItems();
+    };
+    r.readAsDataURL(itemFile.files[0]);
+  } else {
+    await db.collection('items').add({n,q,max:q,img:''});
+    itemName.value=itemQty.value='';
+    renderItems();
+  }
 }
-function renderTasks(){
- const container=document.getElementById('tasksContainer');
- container.innerHTML='';
- const now=Date.now();
- tasks.forEach((tsk,i)=>{
-  const overdue=tsk.dl&&!tsk.done&&new Date(tsk.dl).getTime()<now;
-  if(overdue&&!tsk.notified){wa(`⏰ Просрочена задача: ${tsk.t}`);tsk.notified=true;save();}
-  const li=document.createElement('li');
-  li.style.background=tsk.color;
-  li.className=tsk.done?'done':'';
-  li.innerHTML=`<span>${tsk.t}</span><div class='task-buttons'><button class='small primary' onclick='doneTask(${i})'>✔</button><button class='small secondary' onclick='editTask(${i})'>Ред</button><button class='small secondary' onclick='delTask(${i})'>✕</button><input type='color' value='${tsk.color}' class='task-color' style='width:40px;height:30px' onchange='changeColor(${i},this.value)'></div>`;
-  container.appendChild(li);
- });
+
+async function renderItems(){
+  const list=document.getElementById('itemsList');
+  list.innerHTML='';
+  const snap=await db.collection('items').get();
+  snap.forEach(doc=>{
+    const it=doc.data();
+    let color=it.q<2?'var(--red)':it.q<5?'var(--yellow)':'var(--green)';
+    let pct=Math.round(it.q/it.max*100);
+    const d=document.createElement('div');
+    d.className='item';
+    d.innerHTML=`
+      <div class="item-top">
+        ${it.img?`<img src="${it.img}" width="50">`:''}
+        <div class="item-info">
+          <strong>${it.n}</strong>
+          <div class="qty-label">Количество</div>
+          <div class="progress-container">
+            <div class="progress-bar" style="width:${pct}%;background:${color}">${it.q}</div>
+          </div>
+        </div>
+        <div class="item-buttons">
+          <button class="small primary" onclick="issueItem('${doc.id}',${it.q})">Выдал</button>
+          <button class="small secondary" onclick="editItem('${doc.id}',${it.q})">Ред</button>
+          <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
+        </div>
+      </div>`;
+    list.appendChild(d);
+  });
 }
-function doneTask(i){tasks[i].done=!tasks[i].done;save();renderTasks();}
-function editTask(i){const nt=prompt('Текст',tasks[i].t);if(nt!==null)tasks[i].t=nt;save();renderTasks();}
-function delTask(i){if(confirm('Удалить?')){tasks.splice(i,1);save();renderTasks();}}
-function changeColor(i,c){tasks[i].color=c;save();renderTasks();}
-function wa(m){window.open(`https://wa.me/${WA}?text=${encodeURIComponent(m)}`,'_blank');}
-renderItems();renderTasks();
+
+async function issueItem(id,q){
+  if(q>0) await db.collection('items').doc(id).update({q:q-1});
+  renderItems();
+}
+async function editItem(id,q){
+  const n=prompt('Новое количество',q);
+  if(n!==null) await db.collection('items').doc(id).update({q:+n});
+  renderItems();
+}
+async function delItem(id){
+  if(confirm('Удалить?')) await db.collection('items').doc(id).delete();
+  renderItems();
+}
+
+/* TASKS */
+async function addTask(){
+  const t=taskText.value.trim();
+  if(!t) return;
+  await db.collection('tasks').add({
+    t,
+    color:taskColor.value,
+    dl:taskDeadline.value,
+    done:false
+  });
+  taskText.value='';
+  renderTasks();
+}
+
+async function renderTasks(){
+  const ul=document.getElementById('tasksContainer');
+  ul.innerHTML='';
+  const snap=await db.collection('tasks').get();
+  snap.forEach(doc=>{
+    const t=doc.data();
+    const li=document.createElement('li');
+    li.style.background=t.color;
+    if(t.done) li.classList.add('done');
+    li.innerHTML=`
+      <span>${t.t}</span>
+      <div class="task-buttons">
+        <button class="small primary" onclick="doneTask('${doc.id}',${t.done})">✔</button>
+        <button class="small secondary" onclick="editTask('${doc.id}','${t.t}')">Ред</button>
+        <button class="small secondary" onclick="delTask('${doc.id}')">✕</button>
+        <input type="color" class="task-color" value="${t.color}"
+          onchange="colorTask('${doc.id}',this.value)">
+      </div>`;
+    ul.appendChild(li);
+  });
+}
+
+async function doneTask(id,d){await db.collection('tasks').doc(id).update({done:!d});renderTasks();}
+async function editTask(id,t){const n=prompt('Текст',t);if(n!==null)await db.collection('tasks').doc(id).update({t:n});renderTasks();}
+async function delTask(id){if(confirm('Удалить?'))await db.collection('tasks').doc(id).delete();renderTasks();}
+async function colorTask(id,c){await db.collection('tasks').doc(id).update({color:c});}
+
+loadData();
 </script>
-</body>
 
+</body>
 </html>
