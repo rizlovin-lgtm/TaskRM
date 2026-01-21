@@ -34,6 +34,30 @@ button{cursor:pointer;font-weight:bold}
 footer{text-align:center;color:#777;font-size:12px;padding:10px}
 </style>
 </head>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyDyLHYbxuhQn8-vpEXBqhQ7z2UPh1JvFt0",
+  authDomain: "taskrm-69472.firebaseapp.com",
+  projectId: "taskrm-69472",
+  storageBucket: "taskrm-69472.firebasestorage.app",
+  messagingSenderId: "715246745892",
+  appId: "1:715246745892:web:6ad9441c2765fc039cdbb1",
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+
+
+
+
+ 
 <body>
 <header><h1>RM Tasks</h1></header>
 <main>
@@ -57,9 +81,20 @@ footer{text-align:center;color:#777;font-size:12px;padding:10px}
 <footer>RM Tasks · Office system</footer>
 <script>
 const WA='77475573062';
-let items=JSON.parse(localStorage.getItem('items')||'[]');
-let tasks=JSON.parse(localStorage.getItem('tasks')||'[]');
-const save=()=>{localStorage.setItem('items',JSON.stringify(items));localStorage.setItem('tasks',JSON.stringify(tasks));};
+let items = [];
+let tasks = [];
+
+async function loadData() {
+  const itemsSnap = await db.collection("items").get();
+  items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const tasksSnap = await db.collection("tasks").get();
+  tasks = tasksSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  renderItems();
+  renderTasks();
+}
+
 
 /* ITEMS */
 function addItem(){
@@ -140,4 +175,5 @@ function wa(m){window.open(`https://wa.me/${WA}?text=${encodeURIComponent(m)}`,'
 renderItems();renderTasks();
 </script>
 </body>
+
 </html>
