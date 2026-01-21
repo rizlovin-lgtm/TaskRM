@@ -7,17 +7,11 @@
 
 <style>
 :root{
-  --black:#0f0f0f;
-  --orange:#ff9f1a;
-  --gray:#1e1e1e;
-  --text:#f5f5f5;
-  --red:#ff4d4d;
-  --yellow:#ffc107;
-  --green:#4caf50;
-}
+--black:#0f0f0f;--orange:#ff9f1a;--gray:#1e1e1e;
+--text:#f5f5f5;--red:#ff4d4d;--yellow:#ffc107;--green:#4caf50}
 body{margin:0;font-family:Arial;background:var(--black);color:var(--text)}
 header{padding:20px;border-bottom:2px solid var(--orange)}
-h1,h2{margin:0;color:var(--orange)}
+h1,h2{color:var(--orange);margin:0}
 main{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
 section{background:var(--gray);padding:20px;border-radius:14px}
 input,textarea,button{padding:8px;border-radius:8px;border:none;font-size:14px}
@@ -33,22 +27,13 @@ button{cursor:pointer;font-weight:bold}
 .qty-label{color:var(--orange);font-weight:bold}
 .progress-container{background:#333;border-radius:8px;height:20px;overflow:hidden}
 .progress-bar{height:100%;line-height:20px;font-weight:bold;color:#000}
-
 .item-buttons{display:flex;gap:4px}
 
 .task-list{list-style:none;padding:0;margin-top:10px}
-.task-list li{
-  padding:10px;
-  border-radius:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:6px;
-}
+.task-list li{padding:10px;border-radius:10px;display:flex;justify-content:space-between;margin-bottom:6px}
 .task-buttons{display:flex;gap:4px}
 .task-color{width:44px;height:32px;border:none;border-radius:6px}
 .done{text-decoration:line-through;opacity:.5}
-footer{text-align:center;color:#777;font-size:12px;padding:10px}
 </style>
 </head>
 
@@ -62,7 +47,7 @@ footer{text-align:center;color:#777;font-size:12px;padding:10px}
 <input id="itemName" placeholder="Название товара">
 <input id="itemQty" type="number" placeholder="Количество">
 <input id="itemFile" type="file" accept="image/*">
-<button class="primary" onclick="addItem()">Добавить</button>
+<button class="primary" id="addItemBtn">Добавить</button>
 <div id="itemsList"></div>
 </section>
 
@@ -71,141 +56,111 @@ footer{text-align:center;color:#777;font-size:12px;padding:10px}
 <textarea id="taskText" placeholder="Текст задачи"></textarea>
 <input id="taskDeadline" type="datetime-local">
 <input type="color" id="taskColor" value="#ff9f1a" class="task-color">
-<button class="primary" onclick="addTask()">Добавить</button>
+<button class="primary" id="addTaskBtn">Добавить</button>
 <ul id="tasksContainer" class="task-list"></ul>
 </section>
 </main>
 
-<footer>RM Tasks · Firebase</footer>
-
-<!-- Firebase -->
+<!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDyLHYbxuhQn8-vpEXBqhQ7z2UPh1JvFt0",
-  authDomain: "taskrm-69472.firebaseapp.com",
-  projectId: "taskrm-69472"
+ apiKey: "AIzaSyDyLHYbxuhQn8-vpEXBqhQ7z2UPh1JvFt0",
+ authDomain: "taskrm-69472.firebaseapp.com",
+ projectId: "taskrm-69472"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* LOAD DATA */
-async function loadData(){
-  renderItems();
-  renderTasks();
-}
+document.addEventListener('DOMContentLoaded',()=>{
 
 /* ITEMS */
-async function addItem(){
-  const n=itemName.value.trim();
-  const q=+itemQty.value;
-  if(!n||!q) return alert('Заполни данные');
+document.getElementById('addItemBtn').onclick = async ()=>{
+ const n=itemName.value.trim();
+ const q=+itemQty.value;
+ if(!n||!q) return alert('Заполни данные');
 
-  let img='';
-  if(itemFile.files[0]){
-    const r=new FileReader();
-    r.onload=async e=>{
-      img=e.target.result;
-      await db.collection('items').add({n,q,max:q,img});
-      itemName.value=itemQty.value=itemFile.value='';
-      renderItems();
-    };
-    r.readAsDataURL(itemFile.files[0]);
-  } else {
-    await db.collection('items').add({n,q,max:q,img:''});
-    itemName.value=itemQty.value='';
-    renderItems();
-  }
-}
+ let img='';
+ if(itemFile.files[0]){
+  const r=new FileReader();
+  r.onload=async e=>{
+   img=e.target.result;
+   await db.collection('items').add({n,q,max:q,img});
+   itemName.value=itemQty.value=itemFile.value='';
+   renderItems();
+  };
+  r.readAsDataURL(itemFile.files[0]);
+ } else {
+  await db.collection('items').add({n,q,max:q,img:''});
+  itemName.value=itemQty.value='';
+  renderItems();
+ }
+};
 
 async function renderItems(){
-  const list=document.getElementById('itemsList');
-  list.innerHTML='';
-  const snap=await db.collection('items').get();
-  snap.forEach(doc=>{
-    const it=doc.data();
-    let color=it.q<2?'var(--red)':it.q<5?'var(--yellow)':'var(--green)';
-    let pct=Math.round(it.q/it.max*100);
-    const d=document.createElement('div');
-    d.className='item';
-    d.innerHTML=`
-      <div class="item-top">
-        ${it.img?`<img src="${it.img}" width="50">`:''}
-        <div class="item-info">
-          <strong>${it.n}</strong>
-          <div class="qty-label">Количество</div>
-          <div class="progress-container">
-            <div class="progress-bar" style="width:${pct}%;background:${color}">${it.q}</div>
-          </div>
-        </div>
-        <div class="item-buttons">
-          <button class="small primary" onclick="issueItem('${doc.id}',${it.q})">Выдал</button>
-          <button class="small secondary" onclick="editItem('${doc.id}',${it.q})">Ред</button>
-          <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
-        </div>
-      </div>`;
-    list.appendChild(d);
-  });
-}
-
-async function issueItem(id,q){
-  if(q>0) await db.collection('items').doc(id).update({q:q-1});
-  renderItems();
-}
-async function editItem(id,q){
-  const n=prompt('Новое количество',q);
-  if(n!==null) await db.collection('items').doc(id).update({q:+n});
-  renderItems();
-}
-async function delItem(id){
-  if(confirm('Удалить?')) await db.collection('items').doc(id).delete();
-  renderItems();
+ itemsList.innerHTML='';
+ const snap=await db.collection('items').get();
+ snap.forEach(d=>{
+  const it=d.data();
+  let c=it.q<2?'var(--red)':it.q<5?'var(--yellow)':'var(--green)';
+  let p=Math.round(it.q/it.max*100);
+  const div=document.createElement('div');
+  div.className='item';
+  div.innerHTML=`
+  <div class="item-top">
+   ${it.img?`<img src="${it.img}" width="50">`:''}
+   <div class="item-info">
+    <strong>${it.n}</strong>
+    <div class="qty-label">Количество</div>
+    <div class="progress-container">
+     <div class="progress-bar" style="width:${p}%;background:${c}">${it.q}</div>
+    </div>
+   </div>
+   <div class="item-buttons">
+    <button class="small primary" onclick="db.collection('items').doc('${d.id}').update({q:${it.q}-1}).then(renderItems)">Выдал</button>
+    <button class="small secondary" onclick="db.collection('items').doc('${d.id}').delete().then(renderItems)">✕</button>
+   </div>
+  </div>`;
+  itemsList.appendChild(div);
+ });
 }
 
 /* TASKS */
-async function addTask(){
-  const t=taskText.value.trim();
-  if(!t) return;
-  await db.collection('tasks').add({
-    t,
-    color:taskColor.value,
-    dl:taskDeadline.value,
-    done:false
-  });
-  taskText.value='';
-  renderTasks();
-}
+document.getElementById('addTaskBtn').onclick = async ()=>{
+ const t=taskText.value.trim();
+ if(!t) return;
+ await db.collection('tasks').add({
+  t,color:taskColor.value,dl:taskDeadline.value,done:false
+ });
+ taskText.value='';
+ renderTasks();
+};
 
 async function renderTasks(){
-  const ul=document.getElementById('tasksContainer');
-  ul.innerHTML='';
-  const snap=await db.collection('tasks').get();
-  snap.forEach(doc=>{
-    const t=doc.data();
-    const li=document.createElement('li');
-    li.style.background=t.color;
-    if(t.done) li.classList.add('done');
-    li.innerHTML=`
-      <span>${t.t}</span>
-      <div class="task-buttons">
-        <button class="small primary" onclick="doneTask('${doc.id}',${t.done})">✔</button>
-        <button class="small secondary" onclick="editTask('${doc.id}','${t.t}')">Ред</button>
-        <button class="small secondary" onclick="delTask('${doc.id}')">✕</button>
-        <input type="color" class="task-color" value="${t.color}"
-          onchange="colorTask('${doc.id}',this.value)">
-      </div>`;
-    ul.appendChild(li);
-  });
+ tasksContainer.innerHTML='';
+ const snap=await db.collection('tasks').get();
+ snap.forEach(d=>{
+  const t=d.data();
+  const li=document.createElement('li');
+  li.style.background=t.color;
+  if(t.done) li.classList.add('done');
+  li.innerHTML=`
+   <span>${t.t}</span>
+   <div class="task-buttons">
+    <button class="small primary" onclick="db.collection('tasks').doc('${d.id}').update({done:!${t.done}}).then(renderTasks)">✔</button>
+    <button class="small secondary" onclick="db.collection('tasks').doc('${d.id}').delete().then(renderTasks)">✕</button>
+    <input type="color" class="task-color" value="${t.color}"
+     onchange="db.collection('tasks').doc('${d.id}').update({color:this.value}).then(renderTasks)">
+   </div>`;
+  tasksContainer.appendChild(li);
+ });
 }
 
-async function doneTask(id,d){await db.collection('tasks').doc(id).update({done:!d});renderTasks();}
-async function editTask(id,t){const n=prompt('Текст',t);if(n!==null)await db.collection('tasks').doc(id).update({t:n});renderTasks();}
-async function delTask(id){if(confirm('Удалить?'))await db.collection('tasks').doc(id).delete();renderTasks();}
-async function colorTask(id,c){await db.collection('tasks').doc(id).update({color:c});}
-
-loadData();
+renderItems();
+renderTasks();
+});
 </script>
 
 </body>
