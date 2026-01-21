@@ -61,11 +61,13 @@ button{cursor:pointer;font-weight:bold}
 </section>
 </main>
 
-<!-- Firebase v8 -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
+const WA_NUMBER = '77074052052';
+
 const firebaseConfig = {
  apiKey: "AIzaSyDyLHYbxuhQn8-vpEXBqhQ7z2UPh1JvFt0",
  authDomain: "taskrm-69472.firebaseapp.com",
@@ -76,8 +78,14 @@ const db = firebase.firestore();
 
 document.addEventListener('DOMContentLoaded',()=>{
 
-/* ITEMS */
-document.getElementById('addItemBtn').onclick = async ()=>{
+/* WHATSAPP */
+function sendWA(name){
+ const text = `❗ Товар: ${name}\nКоличество меньше 5 шт, нужно заказать`;
+ window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`,'_blank');
+}
+
+/* ADD ITEM */
+addItemBtn.onclick = async ()=>{
  const n=itemName.value.trim();
  const q=+itemQty.value;
  if(!n||!q) return alert('Заполни данные');
@@ -87,25 +95,34 @@ document.getElementById('addItemBtn').onclick = async ()=>{
   const r=new FileReader();
   r.onload=async e=>{
    img=e.target.result;
-   await db.collection('items').add({n,q,max:q,img});
+   await db.collection('items').add({n,q,max:q,img,notified:false});
    itemName.value=itemQty.value=itemFile.value='';
    renderItems();
   };
   r.readAsDataURL(itemFile.files[0]);
  } else {
-  await db.collection('items').add({n,q,max:q,img:''});
+  await db.collection('items').add({n,q,max:q,img:'',notified:false});
   itemName.value=itemQty.value='';
   renderItems();
  }
 };
 
+/* RENDER ITEMS */
 async function renderItems(){
  itemsList.innerHTML='';
  const snap=await db.collection('items').get();
- snap.forEach(d=>{
-  const it=d.data();
-  let c=it.q<2?'var(--red)':it.q<5?'var(--yellow)':'var(--green)';
-  let p=Math.round(it.q/it.max*100);
+
+ snap.forEach(doc=>{
+  const it=doc.data();
+
+  if(it.q < 5 && !it.notified){
+    sendWA(it.n);
+    db.collection('items').doc(doc.id).update({notified:true});
+  }
+
+  let c = it.q < 2 ? 'var(--red)' : it.q < 5 ? 'var(--yellow)' : 'var(--green)';
+  let p = Math.max(0,Math.round(it.q / it.max * 100));
+
   const div=document.createElement('div');
   div.className='item';
   div.innerHTML=`
@@ -119,16 +136,44 @@ async function renderItems(){
     </div>
    </div>
    <div class="item-buttons">
-    <button class="small primary" onclick="db.collection('items').doc('${d.id}').update({q:${it.q}-1}).then(renderItems)">Выдал</button>
-    <button class="small secondary" onclick="db.collection('items').doc('${d.id}').delete().then(renderItems)">✕</button>
+    <button class="small primary" onclick="issue('${doc.id}',${it.q})">Выдал</button>
+    <button class="small secondary" onclick="editItem('${doc.id}','${it.n}',${it.q})">Ред</button>
+    <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
    </div>
   </div>`;
   itemsList.appendChild(div);
  });
 }
 
+window.issue = async(id,q)=>{
+ if(q<=0) return;
+ await db.collection('items').doc(id).update({q:q-1});
+ renderItems();
+};
+
+window.editItem = async(id,n,q)=>{
+ const nn = prompt('Название',n);
+ const nq = prompt('Количество',q);
+ if(nn!==null && nq!==null){
+  await db.collection('items').doc(id).update({
+    n:nn,
+    q:+nq,
+    max:Math.max(+nq,1),
+    notified:false
+  });
+  renderItems();
+ }
+};
+
+window.delItem = async(id)=>{
+ if(confirm('Удалить товар?')){
+  await db.collection('items').doc(id).delete();
+  renderItems();
+ }
+};
+
 /* TASKS */
-document.getElementById('addTaskBtn').onclick = async ()=>{
+addTaskBtn.onclick = async ()=>{
  const t=taskText.value.trim();
  if(!t) return;
  await db.collection('tasks').add({
@@ -141,22 +186,26 @@ document.getElementById('addTaskBtn').onclick = async ()=>{
 async function renderTasks(){
  tasksContainer.innerHTML='';
  const snap=await db.collection('tasks').get();
- snap.forEach(d=>{
-  const t=d.data();
+ snap.forEach(doc=>{
+  const t=doc.data();
   const li=document.createElement('li');
   li.style.background=t.color;
   if(t.done) li.classList.add('done');
   li.innerHTML=`
    <span>${t.t}</span>
    <div class="task-buttons">
-    <button class="small primary" onclick="db.collection('tasks').doc('${d.id}').update({done:!${t.done}}).then(renderTasks)">✔</button>
-    <button class="small secondary" onclick="db.collection('tasks').doc('${d.id}').delete().then(renderTasks)">✕</button>
+    <button class="small primary" onclick="toggleTask('${doc.id}',${t.done})">✔</button>
+    <button class="small secondary" onclick="delTask('${doc.id}')">✕</button>
     <input type="color" class="task-color" value="${t.color}"
-     onchange="db.collection('tasks').doc('${d.id}').update({color:this.value}).then(renderTasks)">
+      onchange="colorTask('${doc.id}',this.value)">
    </div>`;
   tasksContainer.appendChild(li);
  });
 }
+
+window.toggleTask=async(id,d)=>{await db.collection('tasks').doc(id).update({done:!d});renderTasks();}
+window.delTask=async(id)=>{if(confirm('Удалить задачу?')){await db.collection('tasks').doc(id).delete();renderTasks();}}
+window.colorTask=async(id,c)=>{await db.collection('tasks').doc(id).update({color:c});}
 
 renderItems();
 renderTasks();
