@@ -44,6 +44,10 @@ button{cursor:pointer;font-weight:bold}
 <main>
 <section>
 <h2>Офис RM</h2>
+
+<!-- Поле поиска -->
+<input type="text" id="itemSearch" placeholder="Поиск товара..." style="margin-bottom:10px">
+
 <input id="itemName" placeholder="Название товара">
 <input id="itemQty" type="number" placeholder="Количество">
 <input id="itemFile" type="file" accept="image/*">
@@ -145,6 +149,16 @@ async function renderItems(){
  });
 }
 
+/* ПОИСК ТОВАРОВ */
+document.getElementById('itemSearch').addEventListener('input', function(){
+ const query = this.value.toLowerCase();
+ const items = document.querySelectorAll('#itemsList .item');
+ items.forEach(it=>{
+   const name = it.querySelector('strong').textContent.toLowerCase();
+   it.style.display = name.includes(query) ? 'flex' : 'none';
+ });
+});
+
 window.issue = async(id,q)=>{
  if(q<=0) return;
  await db.collection('items').doc(id).update({q:q-1});
@@ -209,7 +223,6 @@ window.colorTask=async(id,c)=>{await db.collection('tasks').doc(id).update({colo
 
 renderItems();
 renderTasks();
-});
 </script>
 
 </body>
