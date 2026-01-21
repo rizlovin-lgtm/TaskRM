@@ -22,9 +22,9 @@ button{cursor:pointer;font-weight:bold}
 .secondary{background:#333;color:#fff}
 .small{padding:4px 8px;font-size:12px}
 
-.item{background:#141414;padding:12px;border-radius:12px;margin-top:10px;display:flex;align-items:center;gap:10px;}
-.item-buttons{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
-.item-info{flex:1;}
+.item{background:#141414;padding:12px;border-radius:12px;margin-top:10px;display:flex;align-items:center;gap:10px;justify-content:space-between;}
+.item-buttons{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.item-info{flex:1;margin-right:10px;}
 .qty-label{color:var(--orange);font-weight:bold;margin-top:4px;}
 .progress-container{background:#333;border-radius:8px;height:20px;overflow:hidden;margin-top:2px;}
 .progress-bar{height:100%;line-height:20px;font-weight:bold;color:#000;text-align:center;}
@@ -168,18 +168,18 @@ async function renderItems(){
    const div = document.createElement('div');
    div.className='item';
    div.innerHTML=`
-   <div class="item-buttons">
-      <button class="small primary" onclick="issue('${doc.id}',${it.q})">Выдал</button>
-      <button class="small secondary" onclick="editItem('${doc.id}','${it.n}',${it.q})">Ред</button>
-      <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
-   </div>
-   ${it.img?`<img src="${it.img}" width="50">`:''}
    <div class="item-info">
+      ${it.img?`<img src="${it.img}" width="50">`:''}
       <strong>${it.n}</strong>
       <div class="qty-label">Количество</div>
       <div class="progress-container">
         <div class="progress-bar" style="width:${p}%;background:${c}">${it.q}</div>
       </div>
+   </div>
+   <div class="item-buttons">
+      <button class="small primary" onclick="issue('${doc.id}',${it.q})">Выдал</button>
+      <button class="small secondary" onclick="editItem('${doc.id}','${it.n}',${it.q})">Ред</button>
+      <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
    </div>`;
    itemsList.appendChild(div);
  });
