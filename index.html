@@ -22,13 +22,12 @@ button{cursor:pointer;font-weight:bold}
 .secondary{background:#333;color:#fff}
 .small{padding:4px 8px;font-size:12px}
 
-.item{background:#141414;padding:12px;border-radius:12px;margin-top:10px}
-.item-top{display:flex;gap:10px;align-items:center}
-.item-info{flex:1}
-.qty-label{color:var(--orange);font-weight:bold}
-.progress-container{background:#333;border-radius:8px;height:20px;overflow:hidden}
-.progress-bar{height:100%;line-height:20px;font-weight:bold;color:#000}
-.item-buttons{display:flex;gap:4px}
+.item{background:#141414;padding:12px;border-radius:12px;margin-top:10px;display:flex;align-items:center;gap:10px;}
+.item-buttons{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
+.item-info{flex:1;}
+.qty-label{color:var(--orange);font-weight:bold;margin-top:4px;}
+.progress-container{background:#333;border-radius:8px;height:20px;overflow:hidden;margin-top:2px;}
+.progress-bar{height:100%;line-height:20px;font-weight:bold;color:#000;text-align:center;}
 
 .task-list{list-style:none;padding:0;margin-top:10px}
 .task-list li{padding:10px;border-radius:10px;display:flex;justify-content:space-between;margin-bottom:6px}
@@ -36,7 +35,12 @@ button{cursor:pointer;font-weight:bold}
 .task-color{width:44px;height:32px;border:none;border-radius:6px}
 .done{text-decoration:line-through;opacity:.5}
 
-/* Поиск выделен */
+/* Поле поиска рядом с кнопкой */
+.search-container{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
 #itemSearch{
   background:#ff9f1a;
   color:#000;
@@ -44,9 +48,9 @@ button{cursor:pointer;font-weight:bold}
   padding:8px;
   border-radius:8px;
   border:none;
-  width:100%;
-  margin-bottom:10px;
+  flex:1;
 }
+.input-group{margin-bottom:8px;}
 </style>
 </head>
 
@@ -58,13 +62,21 @@ button{cursor:pointer;font-weight:bold}
 <section>
 <h2>Офис RM</h2>
 
-<!-- Поле поиска -->
-<input type="text" id="itemSearch" placeholder="Поиск товара...">
+<div class="input-group">
+  <input id="itemName" placeholder="Название товара">
+</div>
+<div class="input-group">
+  <input id="itemQty" type="number" placeholder="Количество">
+</div>
+<div class="input-group">
+  <input id="itemFile" type="file" accept="image/*">
+</div>
 
-<input id="itemName" placeholder="Название товара">
-<input id="itemQty" type="number" placeholder="Количество">
-<input id="itemFile" type="file" accept="image/*">
-<button class="primary" id="addItemBtn">Добавить</button>
+<div class="search-container">
+  <button class="primary" id="addItemBtn">Добавить</button>
+  <input type="text" id="itemSearch" placeholder="Поиск товара...">
+</div>
+
 <div id="itemsList"></div>
 </section>
 
@@ -85,7 +97,7 @@ button{cursor:pointer;font-weight:bold}
 <script>
 const WA_NUMBER = '77074052052';
 
-/* Элементы DOM */
+/* DOM */
 const addItemBtn = document.getElementById('addItemBtn');
 const addTaskBtn = document.getElementById('addTaskBtn');
 const itemName = document.getElementById('itemName');
@@ -156,20 +168,18 @@ async function renderItems(){
    const div = document.createElement('div');
    div.className='item';
    div.innerHTML=`
-   <div class="item-top">
-    ${it.img?`<img src="${it.img}" width="50">`:''}
-    <div class="item-info">
+   <div class="item-buttons">
+      <button class="small primary" onclick="issue('${doc.id}',${it.q})">Выдал</button>
+      <button class="small secondary" onclick="editItem('${doc.id}','${it.n}',${it.q})">Ред</button>
+      <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
+   </div>
+   ${it.img?`<img src="${it.img}" width="50">`:''}
+   <div class="item-info">
       <strong>${it.n}</strong>
       <div class="qty-label">Количество</div>
       <div class="progress-container">
         <div class="progress-bar" style="width:${p}%;background:${c}">${it.q}</div>
       </div>
-    </div>
-    <div class="item-buttons">
-      <button class="small primary" onclick="issue('${doc.id}',${it.q})">Выдал</button>
-      <button class="small secondary" onclick="editItem('${doc.id}','${it.n}',${it.q})">Ред</button>
-      <button class="small secondary" onclick="delItem('${doc.id}')">✕</button>
-    </div>
    </div>`;
    itemsList.appendChild(div);
  });
